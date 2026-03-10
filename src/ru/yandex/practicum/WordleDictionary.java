@@ -43,7 +43,7 @@ public class WordleDictionary {
         return word.toLowerCase().replace('ё', 'е');
     }
 
-    public String getRandomWord(){
+    public String getRandomWord() {
         Random random = new Random();
         return words.get(random.nextInt(words.size()));
     }
@@ -90,7 +90,7 @@ public class WordleDictionary {
     }
 
     public void checkDictionaryEmpty() throws EmptyDictionary {
-        if(words.isEmpty()) {
+        if (words.isEmpty()) {
             throw new EmptyDictionary("Словарь пуст.");
         }
     }

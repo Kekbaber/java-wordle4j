@@ -64,6 +64,7 @@ public class WordleGame {
         isGameOver = false;
         solver = new WordleSolver(dictionary.getList());
     }
+
     public void generateNewAnswer() {
         answer = dictionary.getRandomWord();
     }

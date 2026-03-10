@@ -1,6 +1,6 @@
 package ru.yandex.practicum.exceptions;
 
-public class WordNotFoundInDictionary extends GameExceptions  {
+public class WordNotFoundInDictionary extends GameExceptions {
 
     private final String word;
 

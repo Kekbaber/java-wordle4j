@@ -58,7 +58,7 @@ public class WordleGameTest {
     }
 
     @Test
-    void testSetsWinAndGameOverAfterCorrectAnswer() throws GameExceptions {;
+    void testSetsWinAndGameOverAfterCorrectAnswer() throws GameExceptions {
         game.guess("слово");
         assertTrue(game.isWin());
         assertTrue(game.isGameOver());
