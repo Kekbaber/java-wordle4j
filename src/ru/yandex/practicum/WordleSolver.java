@@ -52,7 +52,13 @@ public class WordleSolver {
         if (!candidates.isEmpty()) {
             return selectBestCandidate(candidates);
         } else {
-            return dictionary.get(new Random().nextInt(dictionary.size()));
+            List<String> remaining = new ArrayList<>(dictionary);
+            remaining.removeAll(userWords.keySet());
+            if (remaining.isEmpty()) {
+                return dictionary.get(new Random().nextInt(dictionary.size()));
+            } else {
+                return remaining.get(new Random().nextInt(remaining.size()));
+            }
         }
     }
 

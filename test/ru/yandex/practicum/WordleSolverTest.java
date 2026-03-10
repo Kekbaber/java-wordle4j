@@ -54,9 +54,13 @@ public class WordleSolverTest {
         Map<String, String> used = new LinkedHashMap<>();
         used.put("слова", "-----");
         used.put("слово", "-----");
+        used.put("молот", "-----");
+        used.put("загиб", "-----");
         String hint = solver.getHint(used);
         assertNotEquals("слова", hint);
         assertNotEquals("слово", hint);
+        assertNotEquals("молот", hint);
+        assertNotEquals("загиб", hint);
     }
 
     @Test
