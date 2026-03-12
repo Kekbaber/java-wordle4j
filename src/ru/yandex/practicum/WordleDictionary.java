@@ -5,6 +5,7 @@ import ru.yandex.practicum.exceptions.InvalidWord;
 import ru.yandex.practicum.exceptions.WordNotFoundInDictionary;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -96,7 +97,7 @@ public class WordleDictionary {
     }
 
     public List<String> getList() {
-        return new ArrayList<>(words);
+        return Collections.unmodifiableList(words);
     }
 
     public int size() {

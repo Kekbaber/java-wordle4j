@@ -18,112 +18,104 @@ public class WordleDictionaryTest {
     }
 
     @Test
-    void testAddWordValidNormalized() {
+    void shouldAddNormalizedWord() {
         dictionary.add("кранЫ");
         assertEquals(1, dictionary.size());
         assertTrue(dictionary.getList().contains("краны"));
     }
 
     @Test
-    void testAddWordValidReplaceToE() {
+    void shouldAddReplaceToE() {
         dictionary.add("вёрст");
         assertEquals(1, dictionary.size());
         assertTrue(dictionary.getList().contains("верст"));
     }
 
     @Test
-    void testAddWordInvalidLength() {
+    void shouldNotAddInvalidWord() {
         dictionary.add("кот");
-        assertEquals(0, dictionary.size());
-    }
-
-    @Test
-    void testAddWordEnglishWord() {
         dictionary.add("mouse");
-        assertEquals(0, dictionary.size());
-    }
-
-    @Test
-    void testAddWordSpecChar() {
-        dictionary.add("кросс");
-
         dictionary.add("не+слово");
         dictionary.add("ля-л!");
+        assertEquals(0, dictionary.size());
+
+        dictionary.add("кросс");
         assertEquals(1, dictionary.size());
     }
 
+
     @Test
-    void testValidateWord() {
+    void shouldValidateWord() {
         assertTrue(dictionary.validateWord("молок"));
         assertTrue(dictionary.validateWord("слово"));
     }
 
     @Test
-    void testValidateWordInvalid() {
+    void shouldNotValidateInvalidWord() {
         assertFalse(dictionary.validateWord("дом"));
         assertFalse(dictionary.validateWord("молоко"));
         assertFalse(dictionary.validateWord("ёлка"));
     }
 
     @Test
-    void testValidateWordEnglish() {
+    void shouldNotValidateEnglishWord() {
         assertFalse(dictionary.validateWord("house"));
     }
 
     @Test
-    void testValidateWordSpecChar() {
+    void shouldNotValidateWordWithSpecChar() {
         assertFalse(dictionary.validateWord("с-лово"));
     }
 
     @Test
-    void testNormalizeWord() {
+    void shouldNormalizeWord() {
         assertEquals("ежик", dictionary.normalizeWord("ёжик"));
         assertEquals("елка", dictionary.normalizeWord("ёлка"));
         assertEquals("медведь", dictionary.normalizeWord("медведь"));
     }
 
     @Test
-    void testGetFeedbackExactMatched() {
+    void shouldReturnExactFeedback() {
         dictionary.add("столб");
         String feedback = dictionary.getFeedback("столб", "столб");
         assertEquals("+++++", feedback);
     }
 
     @Test
-    void testGetFeedbackMixed() {
+    void shouldReturnMixedFeedback() {
         dictionary.add("книга");
         String feedback = dictionary.getFeedback("аббат", "табак");
         assertEquals("^-++^", feedback);
     }
 
     @Test
-    void testCheckWordValidateValid() throws InvalidWord {
-        dictionary.checkWordValidate("слово");
+    void shouldDoseNotThrowWhenValidate() {
+        assertDoesNotThrow(() -> dictionary.checkWordValidate("слово"));
     }
 
     @Test
-    void testCheckWordValidateInvalidThrows() {
+    void shouldThrowWhenValidate() {
         assertThrows(InvalidWord.class, () -> dictionary.checkWordValidate("дом"));
     }
 
     @Test
-    void testCheckWordExistsExists() throws WordNotFoundInDictionary {
+    void shouldDoseNotThrowWhenCheckWordExists() {
         dictionary.add("слово");
-        dictionary.checkWordExists("слово");
+        assertDoesNotThrow(() -> dictionary.checkWordExists("слово"));
     }
 
     @Test
-    void testCheckWordExistsNotExistsThrows() {
+    void shouldThrowWhenCheckWordNotExist() {
         assertThrows(WordNotFoundInDictionary.class, () -> dictionary.checkWordExists("слово"));
     }
 
     @Test
-    void testCheckDictionaryEmptyThrows() {
+    void shouldThrowWhenCheckEmptyDictionary() {
         assertThrows(EmptyDictionary.class, () -> dictionary.checkDictionaryEmpty());
     }
 
     @Test
-    void testCheckDictionaryEmptyNotEmptyValid() throws EmptyDictionary {
+    void shouldDoesNotThrowWhenCheckNotEmpty() throws EmptyDictionary {
         dictionary.add("слово");
         dictionary.checkDictionaryEmpty();
     }

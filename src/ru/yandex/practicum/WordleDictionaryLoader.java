@@ -3,6 +3,9 @@ package ru.yandex.practicum;
 import ru.yandex.practicum.exceptions.ProgramException;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -35,6 +38,12 @@ public class WordleDictionaryLoader {
     }
 
     private void loadDictionary(String path) throws IOException, ProgramException {
+        if (!Files.exists(Paths.get(path))) {
+            String errorMsg = "Словарь не найден по указанному пути: " + path;
+            logger.error(errorMsg);
+            throw new FileNotFoundException(errorMsg);
+        }
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -50,9 +59,5 @@ public class WordleDictionaryLoader {
             logger.error(e.getMessage());
             throw e;
         }
-    }
-
-    public WordleDictionary getDictionary() {
-        return dictionary;
     }
 }

@@ -1,7 +1,9 @@
 package ru.yandex.practicum;
 
 import ru.yandex.practicum.exceptions.GameExceptions;
+import ru.yandex.practicum.exceptions.ProgramException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 /*
@@ -16,51 +18,65 @@ import java.util.Scanner;
 public class Wordle {
 
     private static final String EXIT_COMMAND = "/q";
+    private static final String RESET_COMMAND = "/r";
+    private static final String LOGGER_NAME = "game.log";
 
     public static void main(String[] args) {
         gameLoop();
     }
 
     public static void gameLoop() {
-        try (GameLogger logger = new GameLogger("game.log", false)) {
-            Scanner scanner = new Scanner(System.in);
-            WordleDictionary dictionary = new WordleDictionary();
-            WordleDictionaryLoader loader = WordleDictionaryLoader.create(dictionary, logger);
+        try (GameLogger logger = new GameLogger(LOGGER_NAME, false)) {
+            WordleGame game = initGame(logger);
 
-            String input = "";
+            Scanner scanner = new Scanner(System.in);
+
+            String input;
             String feedback;
-            WordleGame game = new WordleGame(loader.getDictionary(), logger);
-            game.startGame();
+            int currentAttempt;
 
             printHello();
             printRules();
+            game.startGame();
+
+            mainLoop:
             while (!game.isGameOver()) {
                 try {
-                    System.out.println("Попытка " + game.getSteps());
+                    currentAttempt = game.getSteps() + 1;
+                    System.out.println("Попытка " + currentAttempt);
                     input = scanner.nextLine();
-
-                    if (input.equals(EXIT_COMMAND)) {
-                        logger.info("Выход из игры");
-                        break;
-                    }
 
                     if (input.isBlank()) {
                         input = game.getHint();
                         System.out.println(input);
                     }
 
-                    feedback = game.guess(input);
+                    switch (input) {
+                        case EXIT_COMMAND -> {
+                            logger.info("Выход из игры");
+                            break mainLoop;
+                        }
+                        case RESET_COMMAND -> {
+                            restartGame(game, logger);
+                            continue mainLoop;
+                        }
+                        default -> {
+                            feedback = game.guess(input);
+                            System.out.println(feedback);
+                        }
+                    }
 
-                    System.out.println(feedback);
-
-                    if (game.isWin()) {
-                        System.out.println("Победа!");
+                    if (game.isGameOver()) {
+                        System.out.println(game.isWin() ? "Победа!" : "Правильный ответ: " + game.getAnswer());
+                        System.out.println("Если хотите сыграть еще раз, введите: " + RESET_COMMAND);
+                        input = scanner.nextLine();
+                        if (input.equals(RESET_COMMAND)) {
+                            restartGame(game, logger);
+                            continue;
+                        }
                         break;
-                    } else if (game.isGameOver()) {
-                        System.out.println("Правильный ответ: " + game.getAnswer());
                     }
                 } catch (GameExceptions e) {
-                    logger.warn(e.getMessage());
                     System.out.println(e.getMessage());
                 }
             }
@@ -68,6 +84,12 @@ public class Wordle {
         } catch (Exception e) {
             System.out.println("Критическая ошибка: " + e.getMessage());
         }
+    }
+
+    public static WordleGame initGame(GameLogger logger) throws IOException, ProgramException {
+        WordleDictionary dictionary = new WordleDictionary();
+        WordleDictionaryLoader loader = WordleDictionaryLoader.create(dictionary, logger);
+        return new WordleGame(dictionary, logger);
     }
 
     public static void printHello() {
@@ -82,9 +104,16 @@ public class Wordle {
         System.out.println("- буквы нет в слове");
         System.out.println("Нажмите Enter без ввода, чтобы получить подсказку");
         System.out.println("Введите " + EXIT_COMMAND + " для выхода из игры");
+        System.out.println("Введите " + RESET_COMMAND + " для перезапуска игры");
+    }
+
+    public static void restartGame(WordleGame game, GameLogger logger) {
+        logger.info("Перезапуск игры");
+        printRules();
+        game.startGame();
     }
 
     public static void printExit() {
-        System.out.println("Игра окончена!");
+        System.out.println("Завершение игры!");
     }
 }

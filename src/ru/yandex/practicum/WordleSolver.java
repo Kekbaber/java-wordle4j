@@ -2,58 +2,40 @@ package ru.yandex.practicum;
 
 import java.util.*;
 
-import static ru.yandex.practicum.WordleSymbol.EXACT;
-import static ru.yandex.practicum.WordleSymbol.PRESENT;
-
 public class WordleSolver {
-
     private final List<String> dictionary;
-    private final Set<Character> presentLetters;
-    private final Set<Character> absentLetters;
-    private final char[] exactPositions;
-    private final Map<Character, Set<Integer>> notInPositions;
 
     public WordleSolver(List<String> dictionary) {
         this.dictionary = dictionary;
-        this.presentLetters = new HashSet<>();
-        this.absentLetters = new HashSet<>();
-        this.exactPositions = new char[5];
-        this.notInPositions = new HashMap<>();
     }
 
-    public String getHint(Map<String, String> userWords) {
-        if (userWords.isEmpty()) {
-            return dictionary.get(new Random().nextInt(dictionary.size()));
-        }
-
-        presentLetters.clear();
-        absentLetters.clear();
-        Arrays.fill(exactPositions, (char) 0);
-        notInPositions.clear();
-
-        for (Map.Entry<String, String> entry : userWords.entrySet()) {
-            String word = entry.getKey();
-            String feedback = entry.getValue();
-            processFeedback(word, feedback);
-        }
-
+    public String getHint(GameState state) {
         List<String> candidates = new ArrayList<>();
 
         for (String word : dictionary) {
-            if (userWords.containsKey(word)) {
+            if (state.isWordUsed(word)) {
                 continue;
             }
-
-            if (isCandidate(word)) {
+            if (isCandidate(word,
+                    state.getPresentLetters(),
+                    state.getAbsentLetters(),
+                    state.getExactPositions(),
+                    state.getNotInPositions())) {
                 candidates.add(word);
             }
         }
 
+        if (state.getUsedWords().isEmpty()) {
+            return dictionary.get(new Random().nextInt(dictionary.size()));
+        }
+
         if (!candidates.isEmpty()) {
-            return selectBestCandidate(candidates);
+            return selectBestCandidate(candidates,
+                    state.getPresentLetters(),
+                    state.getAbsentLetters());
         } else {
             List<String> remaining = new ArrayList<>(dictionary);
-            remaining.removeAll(userWords.keySet());
+            remaining.removeAll(state.getUsedWords());
             if (remaining.isEmpty()) {
                 return dictionary.get(new Random().nextInt(dictionary.size()));
             } else {
@@ -62,50 +44,31 @@ public class WordleSolver {
         }
     }
 
-    private void processFeedback(String word, String feedback) {
-        for (int i = 0; i < 5; i++) {
-            char c = word.charAt(i);
-            char f = feedback.charAt(i);
-
-            if (f == EXACT.getSymbol()) {
-                exactPositions[i] = c;
-                presentLetters.add(c);
-
-                Set<Integer> forbidden = notInPositions.get(c);
-                if (forbidden != null) {
-                    forbidden.remove(i);
-                }
-            } else if (f == PRESENT.getSymbol()) {
-                presentLetters.add(c);
-                notInPositions.computeIfAbsent(c, k -> new HashSet<>()).add(i);
-            } else {
-                if (!presentLetters.contains(c)) {
-                    absentLetters.add(c);
-                }
-            }
-        }
-    }
-
-    private boolean isCandidate(String word) {
-        for (char c : absentLetters) {
+    private boolean isCandidate(String word,
+                                Set<Character> present,
+                                Set<Character> absent,
+                                char[] exact,
+                                Map<Character, Set<Integer>> notInPosition) {
+        for (char c : absent) {
             if (word.indexOf(c) >= 0) {
                 return false;
             }
         }
 
         for (int i = 0; i < 5; i++) {
-            if (exactPositions[i] != 0 && word.charAt(i) != exactPositions[i]) {
+            if (exact[i] != 0
+                    && word.charAt(i) != exact[i]) {
                 return false;
             }
         }
 
-        for (char c : presentLetters) {
+        for (char c : present) {
             if (word.indexOf(c) < 0) {
                 return false;
             }
         }
 
-        for (Map.Entry<Character, Set<Integer>> entry : notInPositions.entrySet()) {
+        for (Map.Entry<Character, Set<Integer>> entry : notInPosition.entrySet()) {
             char c = entry.getKey();
             Set<Integer> forbidden = entry.getValue();
             for (int pos : forbidden) {
@@ -118,12 +81,14 @@ public class WordleSolver {
         return true;
     }
 
-    private String selectBestCandidate(List<String> candidates) {
+    private String selectBestCandidate(List<String> candidates,
+                                       Set<Character> present,
+                                       Set<Character> absent) {
         String best = null;
         int maxNewLetters = -1;
 
         for (String word : candidates) {
-            int newLetters = countNewLetters(word);
+            int newLetters = countNewLetters(word, present, absent);
             if (newLetters > maxNewLetters) {
                 maxNewLetters = newLetters;
                 best = word;
@@ -133,11 +98,13 @@ public class WordleSolver {
         return best;
     }
 
-    private int countNewLetters(String word) {
+    private int countNewLetters(String word,
+                                Set<Character> present,
+                                Set<Character> absent) {
         Set<Character> newOnes = new HashSet<>();
         for (int i = 0; i < word.length(); i++) {
             char c = word.charAt(i);
-            if (!presentLetters.contains(c) && !absentLetters.contains(c)) {
+            if (!present.contains(c) && !absent.contains(c)) {
                 newOnes.add(c);
             }
         }

@@ -1,9 +1,6 @@
 package ru.yandex.practicum;
 
 import ru.yandex.practicum.exceptions.GameExceptions;
-import ru.yandex.practicum.exceptions.WordAlreadyUsed;
-
-import java.util.*;
 
 /*
 в этом классе хранится словарь и состояние игры
@@ -22,109 +19,68 @@ public class WordleGame {
     private static final int DEFAULT_MAX_STEPS = 6;
 
     private final WordleDictionary dictionary;
-    private WordleSolver solver;
-    private Map<String, String> usedWords;
+    private final WordleSolver solver;
     private final GameLogger logger;
-    private String answer;
-    private final int maxSteps;
-    private int steps;
-    private boolean isWin = false;
-    private boolean isGameOver = false;
+
+    private GameState state;
 
     public WordleGame(WordleDictionary dictionary, GameLogger logger) {
         this.dictionary = dictionary;
         this.logger = logger;
-        this.maxSteps = DEFAULT_MAX_STEPS;
-    }
-
-    public WordleGame(WordleDictionary dictionary, GameLogger logger, int maxSteps) {
-        this.dictionary = dictionary;
-        this.logger = logger;
-        this.maxSteps = maxSteps;
-    }
-
-    public void startGame() {
-        init();
-        generateNewAnswer();
-        logger.info("Начало игры. Загаданное слово: " + answer);
-    }
-
-    public void startGame(String answer) throws GameExceptions {
-        dictionary.checkWordValidate(answer);
-        dictionary.checkWordExists(answer);
-        init();
-        this.answer = answer;
-        logger.info("Начало игры. Загаданное слово: " + answer);
-    }
-
-    private void init() {
-        usedWords = new LinkedHashMap<>();
-        steps = 1;
-        isWin = false;
-        isGameOver = false;
         solver = new WordleSolver(dictionary.getList());
     }
 
-    public void generateNewAnswer() {
-        answer = dictionary.getRandomWord();
+    public void startGame() {
+        String answer = dictionary.getRandomWord();
+        state = new GameState(answer, DEFAULT_MAX_STEPS, logger);
+    }
+
+    public void startGame(String answer, int maxSteps) throws GameExceptions {
+        dictionaryValidator(answer);
+        state = new GameState(answer, maxSteps, logger);
     }
 
     public String guess(String guess) throws GameExceptions {
-        logger.info("Попытка " + steps + ": " + guess);
-
+        int step = state.getSteps() + 1;
+        logger.info("Попытка " + step + ": " + guess);
         guess = dictionary.normalizeWord(guess);
 
-        dictionary.checkWordValidate(guess);
-        dictionary.checkWordExists(guess);
-        checkWordAlreadyUsed(guess);
-
-        String feedback = dictionary.getFeedback(guess, answer);
-        usedWords.put(guess, feedback);
-        steps++;
-        checkAnswer(guess);
-        checkSteps();
-        return feedback;
-    }
-
-    private void checkSteps() {
-        if (steps > maxSteps) {
-            logger.info("Поражение! Превышено количество попыток.");
-            isGameOver = true;
+        try {
+            dictionaryValidator(guess);
+            state.checkWordAlreadyUsed(guess);
+            String feedback = dictionary.getFeedback(guess, state.getAnswer());
+            logger.info("Фидбек: " + feedback);
+            state.update(guess, feedback);
+            return feedback;
+        } catch (GameExceptions e) {
+            logger.warn("Ошибка при попытке %s: %s", step, e.getMessage());
+            throw e;
         }
     }
 
-    private void checkAnswer(String word) {
-        if (word.equals(answer)) {
-            logger.info("Слово угадано!");
-            isGameOver = true;
-            isWin = true;
-        }
+    public void dictionaryValidator(String word) throws GameExceptions {
+        dictionary.checkWordValidate(word);
+        dictionary.checkWordExists(word);
     }
 
     public String getHint() {
         logger.info("Запрос подсказки!");
-        return solver.getHint(usedWords);
+        return solver.getHint(state);
     }
 
     public String getAnswer() {
-        return answer;
+        return state.getAnswer();
     }
 
     public int getSteps() {
-        return steps;
+        return state.getSteps();
     }
 
     public boolean isWin() {
-        return isWin;
+        return state.isWin();
     }
 
     public boolean isGameOver() {
-        return isGameOver;
-    }
-
-    private void checkWordAlreadyUsed(String guess) throws WordAlreadyUsed {
-        if (usedWords.containsKey(guess)) {
-            throw new WordAlreadyUsed();
-        }
+        return state.isGameOver();
     }
 }

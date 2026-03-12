@@ -11,61 +11,59 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class WordleGameTest {
 
-    private WordleDictionary dictionary;
     private WordleGame game;
-    private GameLogger logger;
+    private final GameLogger logger = new GameLogger(System.out);
 
     @BeforeEach
     void beforeEach() throws GameExceptions {
-        dictionary = new WordleDictionary();
+        WordleDictionary dictionary = new WordleDictionary();
         dictionary.add("слово");
         dictionary.add("молот");
         dictionary.add("крона");
         dictionary.add("слива");
-        logger = new GameLogger(System.out);
-        game = new WordleGame(dictionary, logger, 3);
-        game.startGame("слово");
+        game = new WordleGame(dictionary, logger);
+        game.startGame("слово", 3);
     }
 
     @Test
-    void testStartGameInit() {
-        assertEquals(1, game.getSteps());
+    void shouldInitGame() {
+        assertEquals(0, game.getSteps());
         assertFalse(game.isGameOver());
         assertFalse(game.isWin());
     }
 
     @Test
-    void testGameIncrementStepsAndReturnFeedback() throws GameExceptions {
+    void ShouldReturnFeedbackAndIncrementSteps() throws GameExceptions {
         String feedback = game.guess("молот");
         assertNotNull(feedback);
-        assertEquals(2, game.getSteps());
+        assertEquals(1, game.getSteps());
     }
 
     @Test
-    void testGuessThrowsInvalidWordException() {
+    void ShouldThrowInvalidWordWhenGuess() {
         assertThrows(InvalidWord.class, () -> game.guess("дом"));
     }
 
     @Test
-    void testGuessThrowsWordNotFoundInDictionary() {
+    void shouldThrowsWordNotFoundInDictionaryWhenGuess() {
         assertThrows(WordNotFoundInDictionary.class, () -> game.guess("ааааа"));
     }
 
     @Test
-    void testGuessThrowWordAlreadyUsed() throws GameExceptions {
+    void shouldThrowsWordAlreadyUsedWhenGuess() throws GameExceptions {
         game.guess("молот");
         assertThrows(WordAlreadyUsed.class, () -> game.guess("молот"));
     }
 
     @Test
-    void testSetsWinAndGameOverAfterCorrectAnswer() throws GameExceptions {
+    void shouldSetsWinAndGameOverAfterCorrectAnswer() throws GameExceptions {
         game.guess("слово");
         assertTrue(game.isWin());
         assertTrue(game.isGameOver());
     }
 
     @Test
-    void testGuessMaxStepsReachedSetsGameOver() throws GameExceptions {
+    void shouldSetsGameOverWhenMaxStepsReached() throws GameExceptions {
         game.guess("слива");
         game.guess("крона");
         game.guess("молот");
@@ -74,7 +72,7 @@ public class WordleGameTest {
     }
 
     @Test
-    void testGetHintReturnsWord() {
+    void shouldReturnHint() {
         String hint = game.getHint();
         assertNotNull(hint);
         assertEquals(5, hint.length());

@@ -16,15 +16,31 @@ public class GameLogger extends PrintWriter {
         super(new OutputStreamWriter(out), true);
     }
 
-    public void info(String message) {
-        println(String.format("[%s] INFO: %s", LocalDateTime.now().format(formatter), message));
+    private void log(String level, String message) {
+        println(String.format("[%s] %s: %s", LocalDateTime.now().format(formatter), level, message));
     }
 
-    public void error(String message) {
-        println(String.format("[%s] ERROR: %s", LocalDateTime.now().format(formatter), message));
+    public void info(String message) {
+        log("INFO", message);
     }
 
     public void warn(String message) {
-        println(String.format("[%s] WARN: %s", LocalDateTime.now().format(formatter), message));
+        log("WARN", message);
+    }
+
+    public void error(String message) {
+        log("ERROR", message);
+    }
+
+    public void info(String format, Object... args) {
+        info(String.format(format, args));
+    }
+
+    public void warn(String format, Object... args) {
+        warn(String.format(format, args));
+    }
+
+    public void error(String format, Object... args) {
+        error(String.format(format, args));
     }
 }
