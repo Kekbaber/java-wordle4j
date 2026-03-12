@@ -4,7 +4,6 @@ import ru.yandex.practicum.exceptions.ProgramException;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
